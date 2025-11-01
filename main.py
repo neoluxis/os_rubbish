@@ -41,36 +41,36 @@ def chat(query):
     return result
 
 def log(s):
-    print(s)
+    if DEBUG: print(str(s))
 
 
 def list_history():
     result = subprocess.run(
-        ["ls", "-R", CODE_PATH],   # 命令及参数
-        capture_output=True,  # 捕获 stdout/stderr
-        text=True            # 返回字符串而不是 bytes
+        ["ls", "-R", CODE_PATH],
+        capture_output=True,
+        text=True
     )
     return result
 
 def git(path, commit):
     add = subprocess.run(
-        ['git', 'add', path],   # 命令及参数
-        capture_output=True,  # 捕获 stdout/stderr
-        text=True            # 返回字符串而不是 bytes
+        ['git', 'add', path],
+        capture_output=True,
+        text=True
     )
-    print(add)
+    log(add)
     commit = subprocess.run(
-        ['git', 'commit', '-m', commit],   # 命令及参数
-        capture_output=True,  # 捕获 stdout/stderr
-        text=True            # 返回字符串而不是 bytes
+        ['git', 'commit', '-m', commit],
+        capture_output=True,
+        text=True
     )
-    print(commit)
+    log(commit)
     push = subprocess.run(
-        ['git', 'push'],   # 命令及参数
-        capture_output=True,  # 捕获 stdout/stderr
-        text=True            # 返回字符串而不是 bytes
+        ['git', 'push'],
+        capture_output=True,
+        text=True
     )
-    print(push)
+    log(push)
 
 history_default = [
     {"role": "system", "content": f"你是一个程序员，精通Python, Java, C++ 和 Rust 编程语言，并且非常熟悉算法。在本任务中，你写的代码保存在{CODE_PATH}，该文件夹结构为：{list_history()}，按照语言进行分类。"}
@@ -80,7 +80,7 @@ history = history_default
 def task():
     global history
     history = history_default
-    # print(history)
+    log(history)
 
     output = chat(f"从leetcode随便挑选一道题目，给出解决方案，任选语言。当前已有{list_history()}，注意不要重复。以纯文本形式输出以下信息：1. 纯文本的文件保存位置；2. 纯文本格式的代码；3. 对于该代码的 git commit 信息，只需要commit信息。三者之间使用 --split-- 进行分割")
     path, code, commit = output.split('--split--')
@@ -93,16 +93,6 @@ def task():
     with open(path, 'w') as f: f.write(code)
     git(path, commit)
 
-    # path = chat(f"从leetcode随便挑选一道题目，给出解决方案，任选语言。当前已有{list_history()}，注意不要重复。首先确定题目和文件保存位置。仅需纯文本输出保存位置即可")
-    # print(f"File save to {path}")
-    # time.sleep(5)
-    # code = chat(f"现在给出该题目的解决方案。只需要纯文本的格式给出代码")
-    # print(f"Code: \n{code}")
-    # with open(path, 'w') as f: f.write(code)
-    # time.sleep(5)
-    # commit = chat(f"现在给出本次 git commit 的信息。只需要纯文本输出该信息")
-    # print(commit)
-    # git(commit)
 
 
 def main(args=None):
