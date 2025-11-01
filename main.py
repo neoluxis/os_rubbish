@@ -101,7 +101,7 @@ def main(args=None):
     while True:
         try:
             task()
-            log(f"Finish task {i}")
+            print(f"Finish task {i}")
             i+=1
             time.sleep(INTERVAL*60)
         except Exception as e:
