@@ -52,10 +52,25 @@ def list_history():
     )
     return result
 
-def git(commit):
-    os.system("git add .")
-    os.system(f'git commit "{commit}"')
-    os.system("git push")
+def git(path, commit):
+    add = subprocess.run(
+        ['git', 'add', path],   # 命令及参数
+        capture_output=True,  # 捕获 stdout/stderr
+        text=True            # 返回字符串而不是 bytes
+    )
+    print(add)
+    commit = subprocess.run(
+        ['git', 'commit', '-m', commit],   # 命令及参数
+        capture_output=True,  # 捕获 stdout/stderr
+        text=True            # 返回字符串而不是 bytes
+    )
+    print(commit)
+    push = subprocess.run(
+        ['git', 'push'],   # 命令及参数
+        capture_output=True,  # 捕获 stdout/stderr
+        text=True            # 返回字符串而不是 bytes
+    )
+    print(push)
 
 history_default = [
     {"role": "system", "content": f"你是一个程序员，精通Python, Java, C++ 和 Rust 编程语言，并且非常熟悉算法。在本任务中，你写的代码保存在{CODE_PATH}，该文件夹结构为：{list_history()}，按照语言进行分类。"}
@@ -67,27 +82,7 @@ def task():
     history = history_default
     print(history)
 
-    # output = chat(f"从leetcode随便挑选一道题目，给出解决方案，任选语言。当前已有{list_history()}，注意不要重复。以纯文本形式输出以下信息：1. 纯文本的文件保存位置；2. 纯文本格式的代码；3. 对于该代码的 git commit 信息，只需要commit信息。三者之间使用 --split-- 进行分割")
-    output = """
-./code/python/3_longest_substring_without_repeating_chars.py
---split--
-class Solution:
-    def lengthOfLongestSubstring(self, s: str) -> int:
-        left = 0
-        max_len = 0
-        seen = set()
-
-        for right, ch in enumerate(s):
-            while ch in seen:
-                seen.remove(s[left])
-                left += 1
-            seen.add(ch)
-            max_len = max(max_len, right - left + 1)
-
-        return max_len
---split--
-add Python solution for LeetCode 3. Longest Substring Without Repeating Characters
-"""
+    output = chat(f"从leetcode随便挑选一道题目，给出解决方案，任选语言。当前已有{list_history()}，注意不要重复。以纯文本形式输出以下信息：1. 纯文本的文件保存位置；2. 纯文本格式的代码；3. 对于该代码的 git commit 信息，只需要commit信息。三者之间使用 --split-- 进行分割")
     path, code, commit = output.split('--split--')
     path = path.strip()
     code = code.strip()
@@ -96,7 +91,8 @@ add Python solution for LeetCode 3. Longest Substring Without Repeating Characte
 
     print(f"Code save to {path}")
     with open(path, 'w') as f: f.write(code)
-    git(commit)
+    git(path, commit)
+
     # path = chat(f"从leetcode随便挑选一道题目，给出解决方案，任选语言。当前已有{list_history()}，注意不要重复。首先确定题目和文件保存位置。仅需纯文本输出保存位置即可")
     # print(f"File save to {path}")
     # time.sleep(5)
