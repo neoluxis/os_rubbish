@@ -108,10 +108,13 @@ def task():
 def main(args=None):
     list_history()
     while True:
-        task()
-        log("Finish task")
-        break
-        # time.sleep(INTERVAL*60)
+        try:
+            task()
+            log("Finish task")
+            time.sleep(INTERVAL*60)
+        except Exception as e:
+            print(e)
+            time.sleep(60) # wait for 1 min request rate
 
 if __name__ == '__main__':
     main()
