@@ -16,7 +16,7 @@ MODEL_NAME = os.getenv("OPENAI_MODEL_NAME", "gpt-5")
 API_KEY = os.getenv("OPENAI_API_KEY")
 INTERVAL = int(os.getenv("TIME_INTERVAL", "300"))  # 分钟
 CODE_PATH = os.getenv("CODE_PATH", "./code")
-DEBUG = os.getenv("DEBUG", "false").lower() == "true"
+DEBUG = os.getenv("DEBUG", "INFO").upper()  # 从 .env 获取日志级别
 
 if not API_KEY:
     raise Exception("API key cannot be empty!")
@@ -24,28 +24,15 @@ if not API_KEY:
 client = OpenAI(api_key=API_KEY, base_url=BASE_URL)
 pathlib.Path(CODE_PATH).mkdir(parents=True, exist_ok=True)
 
-# 设置日志配置
-log_formatter = logging.Formatter('%(asctime)s [%(levelname)s] - %(message)s')
-log_handler_console = logging.StreamHandler()  # 控制台输出
-log_handler_file = logging.FileHandler('task.log', mode='a', encoding='utf-8')  # 文件输出
-
-log_handler_console.setFormatter(log_formatter)
-log_handler_file.setFormatter(log_formatter)
-
-logging.basicConfig(level=logging.DEBUG, handlers=[log_handler_console, log_handler_file])
-
-
-def log(message, level="INFO"):
-    """统一日志函数，支持 INFO, DEBUG, ERROR"""
-    if level == "DEBUG" and not DEBUG:
-        return
-
-    if level == "INFO":
-        logging.info(message)
-    elif level == "DEBUG":
-        logging.debug(message)
-    elif level == "ERROR":
-        logging.error(message)
+# 配置日志等级
+logging.basicConfig(
+    level=getattr(logging, DEBUG, logging.INFO),  # 设置日志等级
+    format='%(asctime)s [%(levelname)s] - %(message)s',
+    handlers=[
+        logging.StreamHandler(),  # 控制台输出
+        logging.FileHandler('task.log', mode='a', encoding='utf-8')  # 文件输出
+    ]
+)
 
 
 def list_history():
@@ -59,7 +46,7 @@ def list_history():
         )
         return result.stdout.strip()
     except subprocess.CalledProcessError as e:
-        log(f"Error listing history: {e}", "ERROR")
+        logging.error(f"Error listing history: {e}")
         return ""
 
 
@@ -69,11 +56,11 @@ def git(path, commit_message):
         for cmd in [['git', 'add', path], ['git', 'commit', '-m', commit_message], ['git', 'push']]:
             result = subprocess.run(cmd, capture_output=True, text=True)
             if result.stdout:
-                log(result.stdout.strip(), "INFO")
+                logging.info(result.stdout.strip())
             if result.stderr:
-                log(result.stderr.strip(), "ERROR")
+                logging.error(result.stderr.strip())
     except Exception as e:
-        log(f"Git operation failed: {e}", "ERROR")
+        logging.error(f"Git operation failed: {e}")
 
 
 history_default = [
@@ -103,7 +90,7 @@ def task():
     """执行一次任务：生成代码，保存文件，git 提交"""
     global history
     history = history_default.copy()
-    log("Starting new task...", "INFO")
+    logging.info("Starting new task...")
 
     try:
         output = chat(
@@ -120,14 +107,14 @@ def task():
         pathlib.Path(os.path.dirname(full_path)).mkdir(parents=True, exist_ok=True)
         with open(full_path, 'w', encoding='utf-8') as f:
             f.write(code)
-        log(f"Code saved to {full_path}", "INFO")
+        logging.info(f"Code saved to {full_path}")
 
         # Git 提交
         git(full_path, commit)
-        log(f"Task finished with commit: {commit}", "INFO")
+        logging.info(f"Task finished with commit: {commit}")
 
     except Exception as e:
-        log(f"Task failed: {e}\n{traceback.format_exc()}", "ERROR")
+        logging.error(f"Task failed: {e}\n{traceback.format_exc()}")
 
 
 def main():
@@ -136,10 +123,10 @@ def main():
         try:
             task()
             i += 1
-            log(f"Sleeping for {INTERVAL} minutes before next task...", "INFO")
+            logging.info(f"Sleeping for {INTERVAL} minutes before next task...")
             time.sleep(INTERVAL * 60)
         except Exception as e:
-            log(f"Main loop error: {e}\n{traceback.format_exc()}", "ERROR")
+            logging.error(f"Main loop error: {e}\n{traceback.format_exc()}")
             time.sleep(60)  # 遇到异常等待 1 分钟
 
 
