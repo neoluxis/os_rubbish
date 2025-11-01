@@ -80,14 +80,14 @@ history = history_default
 def task():
     global history
     history = history_default
-    print(history)
+    # print(history)
 
     output = chat(f"从leetcode随便挑选一道题目，给出解决方案，任选语言。当前已有{list_history()}，注意不要重复。以纯文本形式输出以下信息：1. 纯文本的文件保存位置；2. 纯文本格式的代码；3. 对于该代码的 git commit 信息，只需要commit信息。三者之间使用 --split-- 进行分割")
     path, code, commit = output.split('--split--')
     path = path.strip()
     code = code.strip()
     commit = commit.strip()
-    print(path, code, commit)
+    # print(path, code, commit)
 
     print(f"Code save to {path}")
     with open(path, 'w') as f: f.write(code)
@@ -106,11 +106,13 @@ def task():
 
 
 def main(args=None):
-    list_history()
+    # list_history()
+    i=0
     while True:
         try:
             task()
-            log("Finish task")
+            log(f"Finish task {i}")
+            i+=1
             time.sleep(INTERVAL*60)
         except Exception as e:
             print(e)
