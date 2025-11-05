@@ -101,7 +101,7 @@ def task():
             f"三者之间使用 --split-- 进行分割"
         )
         path, code, commit = [x.strip() for x in output.split('--split--')]
-        full_path = os.path.join(CODE_PATH, path) if not os.path.isabs(path) else path
+        full_path = os.path.join(path) if not os.path.isabs(path) else path
 
         # 保存代码
         pathlib.Path(os.path.dirname(full_path)).mkdir(parents=True, exist_ok=True)
